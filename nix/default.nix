@@ -20,7 +20,7 @@ buildDunePackage rec {
   ];
 
   buildInputs =
-    [ ppx_deriving ];
+    [ yojson ppx_deriving ];
 
   inherit doCheck;
 
