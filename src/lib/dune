@@ -1,0 +1,6 @@
+(library
+ (name rinha)
+ (package rinha)
+ (libraries unix)
+ (preprocess
+  (pps ppx_deriving.show)))

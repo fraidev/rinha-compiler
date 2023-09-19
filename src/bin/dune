@@ -1,0 +1,5 @@
+(executable
+ (name cli)
+ (package rinha)
+ (public_name rinha_cli.exe)
+ (libraries rinha))
