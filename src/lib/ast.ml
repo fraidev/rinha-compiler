@@ -126,13 +126,13 @@ let location_of_json json =
 
 let var_of_json json =
   { text = json |> member "text" |> to_string
-  ; var_location = location_of_json json
+  ; var_location = location_of_json (json |> member "location")
   }
 ;;
 
 let parameter_of_json json =
   { parameter_text = json |> member "text" |> to_string
-  ; parameter_location = location_of_json json
+  ; parameter_location = location_of_json (json |> member "location")
   }
 ;;
 
