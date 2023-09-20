@@ -1,4 +1,0 @@
-(library
- (name rinha)
- (package rinha)
- (libraries yojson))

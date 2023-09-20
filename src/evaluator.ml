@@ -103,62 +103,28 @@ let rec eval_term term ctx call_stack =
   | Ast.Binary b ->
     let lhs = eval_term b.lhs ctx call_stack in
     let rhs = eval_term b.rhs ctx call_stack in
-    (match b.op with
-     | Add ->
-       (match lhs, rhs with
-        | Int a, Int b -> Int (a + b)
-        | Str a, Str b -> Str (a ^ b)
-        | _ -> failwith "Invalid types in add")
-     | Sub ->
-       (match lhs, rhs with
-        | Int a, Int b -> Int (a - b)
-        | _ -> failwith "Invalid types in sub")
-     | Mul ->
-       (match lhs, rhs with
-        | Int a, Int b -> Int (a * b)
-        | _ -> failwith "Invalid types in mul")
-     | Div ->
-       (match lhs, rhs with
-        | Int a, Int b -> Int (a / b)
-        | _ -> failwith "Invalid types in div")
-     | Rem ->
-       (match lhs, rhs with
-        | Int a, Int b -> Int (a mod b)
-        | _ -> failwith "Invalid types in rem")
-     | Eq -> Bool (lhs = rhs)
-     | Neq -> Bool (lhs <> rhs)
-     | Lt ->
-       (match lhs, rhs with
-        | Int a, Int b -> Bool (a < b)
-        | _ -> failwith "Invalid types in lt")
-     | Gt ->
-       (match lhs, rhs with
-        | Int a, Int b -> Bool (a > b)
-        | _ -> failwith "Invalid types in gt")
-     | Lte ->
-       (match lhs, rhs with
-        | Int a, Int b -> Bool (a <= b)
-        | _ -> failwith "Invalid types in lte")
-     | Gte ->
-       (match lhs, rhs with
-        | Int a, Int b -> Bool (a >= b)
-        | _ -> failwith "Invalid types in gte")
-     | And ->
-       (match lhs, rhs with
-        | Bool a, Bool b -> Bool (a && b)
-        | _ -> failwith "Invalid types in and")
-     | Or ->
-       (match lhs, rhs with
-        | Bool a, Bool b ->
-          let result = a || b in
-          Bool result
-        | _ -> failwith "Invalid types in or"))
+    (match b.op, lhs, rhs with
+     | Add, Int a, Int b -> Int (a + b)
+     | Add, Str a, Str b -> Str (a ^ b)
+     | Sub, Int a, Int b -> Int (a - b)
+     | Mul, Int a, Int b -> Int (a * b)
+     | Div, Int a, Int b -> Int (a / b)
+     | Rem, Int a, Int b -> Int (a mod b)
+     | Eq, Int a, Int b -> Bool (a = b)
+     | Neq, Int a, Int b -> Bool (a <> b)
+     | Lt, Int a, Int b -> Bool (a < b)
+     | Gt, Int a, Int b -> Bool (a > b)
+     | Lte, Int a, Int b -> Bool (a <= b)
+     | Gte, Int a, Int b -> Bool (a >= b)
+     | And, Bool a, Bool b -> Bool (a && b)
+     | Or, Bool a, Bool b -> Bool (a || b)
+     | _ -> failwith "Invalid types in binary operation")
   | Ast.Int t -> Int t
   | Ast.Str t -> Str t
   | Ast.Bool t -> Bool t
 ;;
 
-let eval_string ast =
+let eval ast =
   let call_stack : Ast.term Stack.t = Stack.create () in
   let ctx : (string, Ast.term) Hashtbl.t = Hashtbl.create 100 in
   let ast_json = Yojson.Safe.from_string ast in
