@@ -19,8 +19,7 @@ buildDunePackage rec {
     # Put dependencies here if you're creating a library
   ];
 
-  buildInputs =
-    [ yojson ppx_deriving ];
+  buildInputs = [ yojson ];
 
   inherit doCheck;
 

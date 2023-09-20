@@ -14,7 +14,5 @@ let () =
   in
   (* Read file *)
   let entrypoint_txt = Utils.read_lines entrypoint in
-  (* print_string(entrypoint_txt); *)
-  let _return = Evaluator.eval_string entrypoint_txt in
-  ()
+  Evaluator.eval_string entrypoint_txt
 ;;

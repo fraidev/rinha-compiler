@@ -13,15 +13,8 @@
  (synopsis "rinha")
  (description "rinha")
  (depends
-  (alcotest :with-test)
   (dune
    (and
     :build
     (>= 3.1.1)))
-  progress
-  eio
-  eio_main
-  bencode
-  stdint
-  uri
-  ppx_deriving))
+  yojson))

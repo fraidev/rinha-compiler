@@ -1,6 +1,4 @@
 (library
  (name rinha)
  (package rinha)
- (libraries unix yojson)
- (preprocess
-  (pps ppx_deriving.show)))
+ (libraries yojson))

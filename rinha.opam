@@ -5,15 +5,8 @@ synopsis: "rinha"
 description: "rinha"
 maintainer: ["fraifelipe@gmail.com"]
 depends: [
-  "alcotest" {with-test}
   "dune" {>= "3.2" & build & >= "3.1.1"}
-  "progress"
-  "eio"
-  "eio_main"
-  "bencode"
-  "stdint"
-  "uri"
-  "ppx_deriving"
+  "yojson"
   "odoc" {with-doc}
 ]
 build: [

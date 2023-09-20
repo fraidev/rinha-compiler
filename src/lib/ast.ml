@@ -74,7 +74,7 @@ and let_ =
 
 and if_ =
   { condition : term
-  ; then_ : term
+  ; then_term : term
   ; otherwise : term
   ; if_location : location
   }
@@ -173,7 +173,7 @@ let rec term_of_json json =
   | "If" ->
     If
       { condition = term_of_json (json |> member "condition")
-      ; then_ = term_of_json (json |> member "then")
+      ; then_term = term_of_json (json |> member "then")
       ; otherwise = term_of_json (json |> member "otherwise")
       ; if_location = location_of_json (json |> member "location")
       }
