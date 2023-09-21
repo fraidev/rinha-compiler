@@ -94,20 +94,17 @@ let rec eval_term term ctx call_stack =
     then eval_term i.then_term ctx call_stack
     else eval_term i.otherwise ctx call_stack
   | Ast.Print p ->
-    let () =
-      eval_term p.print_value ctx call_stack
-      |> value_to_string
-      |> print_endline
-    in
-    Nil
+    let value = eval_term p.print_value ctx call_stack in
+    value |> value_to_string |> print_endline;
+    value
   | Ast.Binary b ->
     let lhs = eval_term b.lhs ctx call_stack in
     let rhs = eval_term b.rhs ctx call_stack in
     (match b.op, lhs, rhs with
      | Add, Int a, Int b -> Int (a + b)
      | Add, Str a, Str b -> Str (a ^ b)
-     | Add, Int a, Str b -> Str (string_of_int(a) ^ b)
-     | Add, Str a, Int b -> Str (a ^ string_of_int(b))
+     | Add, Int a, Str b -> Str (string_of_int a ^ b)
+     | Add, Str a, Int b -> Str (a ^ string_of_int b)
      | Sub, Int a, Int b -> Int (a - b)
      | Mul, Int a, Int b -> Int (a * b)
      | Div, Int a, Int b -> Int (a / b)
