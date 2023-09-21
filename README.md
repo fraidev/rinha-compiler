@@ -3,7 +3,23 @@
 
 ## Como rodar o projeto
 
+Faça o build com:
+
 ```bash
 docker build . -t="rinha"
-docker run -it rinha files/fib.json
 ```
+
+Rode os examplos com:
+
+
+```bash
+docker run rinha files/fib.json
+```
+
+
+Rode outros examples por bind volume usando:
+
+```bash
+docker run -v $(pwd)/files/fib.json:/var/rinha/source.rinha.json rinha
+```
+
