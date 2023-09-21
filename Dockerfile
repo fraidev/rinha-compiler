@@ -30,4 +30,4 @@ RUN chown app:app /home/app/rinha.exe
 WORKDIR /home/app
 USER app
 ENTRYPOINT ["/home/app/rinha.exe"]
-
+CMD ["/var/rinha/source.rinha.json"]
