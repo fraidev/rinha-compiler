@@ -1,46 +1,7 @@
-type return_values =
-  | Int of int32
-  | Str of string
-  | Bool of bool
-  | Tuple of return_values * return_values
-  | Nil
-
-let rec value_to_string json =
-  match json with
-  | Int i -> Int32.to_string i
-  | Str s -> s
-  | Bool b -> string_of_bool b
-  | Tuple (a, b) -> "(" ^ value_to_string a ^ ", " ^ value_to_string b ^ ")"
-  | Nil -> ""
-;;
-
-let value_to_term value =
-  match value with
-  | Int i -> Ast.Int i
-  | Str s -> Ast.Str s
-  | Bool b -> Ast.Bool b
-  | _ -> failwith "Invalid value to term"
-;;
-
-let value_to_bool value =
-  match value with
-  | Int i -> i <> Int32.zero
-  | Str s -> s <> ""
-  | Bool b -> b
-  | Tuple (_, _) -> false
-  | Nil -> false
-;;
-
 let add_or_replace_hashtbl ctx key value =
   if Hashtbl.mem ctx key
   then Hashtbl.replace ctx key value
   else Hashtbl.add ctx key value
-;;
-
-let clone_hashtbl h =
-  let h' = Hashtbl.create (Hashtbl.length h) in
-  Hashtbl.iter (fun k v -> add_or_replace_hashtbl h' k v) h;
-  h'
 ;;
 
 let rec eval_term term ctx call_stack cache =
@@ -72,7 +33,7 @@ let rec eval_term term ctx call_stack cache =
       List.iter
         (fun arg ->
           let evaluated_arg = eval_term arg ctx stack cache in
-          Stack.push (evaluated_arg |> value_to_term) stack)
+          Stack.push (evaluated_arg |> Value.to_term) stack)
         c.arguments
     in
     let value = eval_term c.callee ctx stack cache in
@@ -100,12 +61,12 @@ let rec eval_term term ctx call_stack cache =
      | _ -> failwith "Not a tuple in a second call")
   | Ast.If i ->
     let value = eval_term i.condition ctx call_stack cache in
-    if value_to_bool value
+    if Value.to_bool value
     then eval_term i.then_term ctx call_stack cache
     else eval_term i.otherwise ctx call_stack cache
   | Ast.Print p ->
     let value = eval_term p.print_value ctx call_stack cache in
-    value |> value_to_string |> print_endline;
+    value |> Value.to_string |> print_endline;
     value
   | Ast.Binary b ->
     let lhs = eval_term b.lhs ctx call_stack cache in
@@ -134,16 +95,18 @@ let rec eval_term term ctx call_stack cache =
 ;;
 
 let eval ast =
-  let cache
-    : (Ast.func * (string, Ast.term) Hashtbl.t, return_values) Hashtbl.t
+  let cache : (Ast.func * (string, Ast.term) Hashtbl.t, Value.t) Hashtbl.t
     =
     Hashtbl.create 100
   in
   let call_stack : Ast.term Stack.t = Stack.create () in
   let ctx : (string, Ast.term) Hashtbl.t = Hashtbl.create 100 in
-  let ast_json = Yojson.Safe.from_string ast in
-  let expression = ast_json |> Yojson.Safe.Util.member "expression" in
-  let term = Ast.term_of_json expression in
-  let _ = eval_term term ctx call_stack cache in
+  let expression =
+    ast
+    |> Yojson.Safe.from_string
+    |> Yojson.Safe.Util.member "expression"
+    |> Ast.term_of_json
+  in
+  let _ = eval_term expression ctx call_stack cache in
   ()
 ;;
