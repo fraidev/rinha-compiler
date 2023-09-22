@@ -1,8 +1,8 @@
 open Yojson.Safe.Util
 
 type location =
-  { start : int
-  ; end_ : int
+  { start : int32
+  ; end_ : int32
   ; filename : string
   }
 
@@ -22,7 +22,7 @@ type binary_op =
   | Or
 
 type term =
-  | Int of int
+  | Int of int32
   | Str of string
   | Bool of bool
   | Binary of binary
@@ -118,8 +118,8 @@ let binary_op_of_string = function
 ;;
 
 let location_of_json json =
-  { start = json |> member "start" |> to_int
-  ; end_ = json |> member "end" |> to_int
+  { start = json |> member "start" |> to_int |> Int32.of_int
+  ; end_ = json |> member "end" |> to_int |> Int32.of_int
   ; filename = json |> member "filename" |> to_string
   }
 ;;
@@ -139,7 +139,7 @@ let parameter_of_json json =
 let rec term_of_json json =
   let kind = json |> member "kind" |> to_string in
   match kind with
-  | "Int" -> Int (json |> member "value" |> to_int)
+  | "Int" -> Int (json |> member "value" |> to_int |> Int32.of_int)
   | "Str" -> Str (json |> member "value" |> to_string)
   | "Bool" -> Bool (json |> member "value" |> to_bool)
   | "Binary" ->

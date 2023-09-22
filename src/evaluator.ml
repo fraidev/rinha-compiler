@@ -1,5 +1,5 @@
 type return_values =
-  | Int of int
+  | Int of int32
   | Str of string
   | Bool of bool
   | Tuple of return_values * return_values
@@ -7,7 +7,7 @@ type return_values =
 
 let rec value_to_string json =
   match json with
-  | Int i -> string_of_int i
+  | Int i -> Int32.to_string i
   | Str s -> s
   | Bool b -> string_of_bool b
   | Tuple (a, b) -> "(" ^ value_to_string a ^ ", " ^ value_to_string b ^ ")"
@@ -24,7 +24,7 @@ let value_to_term value =
 
 let value_to_bool value =
   match value with
-  | Int i -> i <> 0
+  | Int i -> i <> Int32.zero
   | Str s -> s <> ""
   | Bool b -> b
   | Tuple (_, _) -> false
@@ -111,16 +111,16 @@ let rec eval_term term ctx call_stack cache =
     let lhs = eval_term b.lhs ctx call_stack cache in
     let rhs = eval_term b.rhs ctx call_stack cache in
     (match b.op, lhs, rhs with
-     | Add, Int a, Int b -> Int (a + b)
+     | Add, Int a, Int b -> Int (Int32.add a b)
      | Add, Str a, Str b -> Str (a ^ b)
-     | Add, Int a, Str b -> Str (string_of_int a ^ b)
-     | Add, Str a, Int b -> Str (a ^ string_of_int b)
-     | Sub, Int a, Int b -> Int (a - b)
-     | Mul, Int a, Int b -> Int (a * b)
-     | Div, Int a, Int b -> Int (a / b)
-     | Rem, Int a, Int b -> Int (a mod b)
-     | Eq, Int a, Int b -> Bool (a = b)
-     | Neq, Int a, Int b -> Bool (a <> b)
+     | Add, Int a, Str b -> Str (Int32.to_string a ^ b)
+     | Add, Str a, Int b -> Str (a ^ Int32.to_string b)
+     | Sub, Int a, Int b -> Int (Int32.sub a b)
+     | Mul, Int a, Int b -> Int (Int32.mul a b)
+     | Div, Int a, Int b -> Int (Int32.div a b)
+     | Rem, Int a, Int b -> Int (Int32.rem a b)
+     | Eq, Int a, Int b -> Bool (Int32.equal a b)
+     | Neq, Int a, Int b -> Bool (not (Int32.equal a b))
      | Lt, Int a, Int b -> Bool (a < b)
      | Gt, Int a, Int b -> Bool (a > b)
      | Lte, Int a, Int b -> Bool (a <= b)
