@@ -3,7 +3,7 @@ type t =
   | Str of string
   | Bool of bool
   | Tuple of t * t
-  | Nil
+  | Fn of (string, t) Hashtbl.t * string list * Ast.term
 
 let rec to_string json =
   match json with
@@ -11,15 +11,22 @@ let rec to_string json =
   | Str s -> s
   | Bool b -> string_of_bool b
   | Tuple (a, b) -> "(" ^ to_string a ^ ", " ^ to_string b ^ ")"
-  | Nil -> ""
+  | Fn (_, _, _) -> "<#closure>"
 ;;
 
-let to_term value =
+let rec to_term value =
   match value with
   | Int i -> Ast.Int i
   | Str s -> Ast.Str s
   | Bool b -> Ast.Bool b
-  | _ -> failwith "Invalid value to term"
+  | Tuple (a, b) ->
+    Ast.Tuple
+      { first = to_term a
+      ; second = to_term b
+      ; tuple_location =
+          { start = Int32.zero; end_ = Int32.zero; filename = "" }
+      }
+  | Fn (_, _, _) -> failwith "Cannot convert closure to term"
 ;;
 
 let to_bool value =
@@ -27,6 +34,6 @@ let to_bool value =
   | Int i -> i <> Int32.zero
   | Str s -> s <> ""
   | Bool b -> b
-  | Tuple (_, _) -> false
-  | Nil -> false
+  | Tuple (_, _) -> failwith "Cannot convert tuple to bool"
+  | Fn (_, _, _) -> failwith "Cannot convert closure to bool"
 ;;

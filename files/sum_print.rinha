@@ -1,0 +1,7 @@
+let _ = print(1); 
+let _ = print(2);
+
+let tuple = (print(3), print(4)); 
+let _ = print(tuple);
+
+print(print(5) + print(6))
