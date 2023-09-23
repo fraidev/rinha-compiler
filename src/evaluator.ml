@@ -7,17 +7,16 @@ let add_or_replace_hashtbl ctx key value =
 let rec eval_term term ctx cache =
   match term with
   | Ast.Let l ->
-    Printf.printf "Adding %s\n" l.name.parameter_text;
     let value = eval_term l.let_value ctx cache in
     (match value with
-     | Value.Fn _ as fn ->
+     | Value.Fn _f as fn ->
        let is_underscore =
          String.starts_with ~prefix:"_" l.name.parameter_text
        in
        (match is_underscore with
         | true -> eval_term l.next ctx cache
         | false ->
-          add_or_replace_hashtbl ctx l.name.parameter_text fn;
+          let _ = add_or_replace_hashtbl ctx l.name.parameter_text fn in
           eval_term l.next ctx cache)
      | _ ->
        let is_underscore =
@@ -26,27 +25,28 @@ let rec eval_term term ctx cache =
        (match is_underscore with
         | true -> eval_term l.next ctx cache
         | false ->
-          add_or_replace_hashtbl ctx l.name.parameter_text value;
+          let _ = add_or_replace_hashtbl ctx l.name.parameter_text value in
           eval_term l.next ctx cache))
   | Ast.Function f ->
     let ps = List.map (fun (p : Ast.var) -> p.text) f.parameters in
-    Value.Fn (ctx, ps, f.value)
+    Value.Fn { ctx; args = ps; value = f.value }
   | Ast.Call c ->
     (match eval_term c.callee ctx cache with
-     | Value.Fn (ctx_intern, args, term) ->
-       let ctx_copy = Hashtbl.copy ctx_intern in
+     | Value.Fn fn ->
+       let ctx_copy = Hashtbl.copy fn.ctx in
        let _ =
-         List.combine args c.arguments
+         List.combine fn.args c.arguments
          |> List.iter (function s, term ->
-           Printf.printf "Adding %s\n" s;
            add_or_replace_hashtbl ctx_copy s (eval_term term ctx cache))
        in
-       eval_term term ctx_copy cache
+       (match Hashtbl.find_opt cache (fn, ctx_copy) with
+        | Some v -> v
+        | None ->
+          let value = eval_term fn.value ctx_copy cache in
+          let _ = add_or_replace_hashtbl cache (fn, ctx_copy) value in
+          value)
      | _ -> failwith "Can't call non-function value")
   | Ast.Var v ->
-    Printf.printf "Looking for %s\n" v.text;
-    let lenctx = Hashtbl.length ctx in
-    Printf.printf "Length of ctx: %d\n" lenctx;
     (match Hashtbl.find_opt ctx v.text with
      | Some v -> v
      | None ->
@@ -107,7 +107,7 @@ let rec eval_term term ctx cache =
 ;;
 
 let eval ast =
-  let cache : (Ast.func * (string, Ast.term) Hashtbl.t, Value.t) Hashtbl.t =
+  let cache : (Value.func * (string, Value.t) Hashtbl.t, Value.t) Hashtbl.t =
     Hashtbl.create 100
   in
   let ctx : (string, Value.t) Hashtbl.t = Hashtbl.create 100 in

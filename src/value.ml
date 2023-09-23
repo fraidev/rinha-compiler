@@ -3,7 +3,15 @@ type t =
   | Str of string
   | Bool of bool
   | Tuple of t * t
-  | Fn of (string, t) Hashtbl.t * string list * Ast.term
+  | Fn of func
+
+(* and func = (string, t) Hashtbl.t * string list * Ast.term *)
+and func =
+  { (* name : string *)
+    ctx : (string, t) Hashtbl.t
+  ; args : string list
+  ; value : Ast.term
+  }
 
 let rec to_string json =
   match json with
@@ -11,7 +19,7 @@ let rec to_string json =
   | Str s -> s
   | Bool b -> string_of_bool b
   | Tuple (a, b) -> "(" ^ to_string a ^ ", " ^ to_string b ^ ")"
-  | Fn (_, _, _) -> "<#closure>"
+  | Fn _ -> "<#closure>"
 ;;
 
 let rec to_term value =
@@ -26,7 +34,7 @@ let rec to_term value =
       ; tuple_location =
           { start = Int32.zero; end_ = Int32.zero; filename = "" }
       }
-  | Fn (_, _, _) -> failwith "Cannot convert closure to term"
+  | Fn _ -> failwith "Cannot convert closure to term"
 ;;
 
 let to_bool value =
@@ -35,5 +43,5 @@ let to_bool value =
   | Str s -> s <> ""
   | Bool b -> b
   | Tuple (_, _) -> failwith "Cannot convert tuple to bool"
-  | Fn (_, _, _) -> failwith "Cannot convert closure to bool"
+  | Fn _ -> failwith "Cannot convert closure to bool"
 ;;
