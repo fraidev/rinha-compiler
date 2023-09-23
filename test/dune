@@ -1,0 +1,4 @@
+(test
+ (name runner)
+ (package rinha)
+ (libraries alcotest rinha))

@@ -15,8 +15,8 @@ RUN opam install . --deps-only --locked
 COPY . /app
 
 # Build OCaml application
-RUN eval $(opam env) && sudo dune build src/main.exe
-RUN sudo cp ./_build/default/src/main.exe /usr/bin/main.exe
+RUN eval $(opam env) && sudo dune build src/bin/main.exe
+RUN sudo cp ./_build/default/src/bin/main.exe /usr/bin/main.exe
 RUN sudo cp -rf ./files /usr/bin/files
 
 

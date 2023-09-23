@@ -23,3 +23,15 @@ Rode outros examples por bind volume usando:
 docker run -v $(pwd)/files/fib.json:/var/rinha/source.rinha.json rinha
 ```
 
+## Dev Setup with Nix
+
+```bash
+nix develop -c $SHELL
+```
+
+
+## Como rodar os testes
+
+```bash
+dune build @runtest --force --no-buffer
+```

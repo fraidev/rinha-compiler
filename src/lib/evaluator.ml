@@ -4,45 +4,46 @@ let add_or_replace_hashtbl ctx key value =
   else Hashtbl.add ctx key value
 ;;
 
-let rec eval_term term ctx cache =
+let rec eval_term term ctx cache output =
   match term with
   | Ast.Let l ->
-    let value = eval_term l.let_value ctx cache in
+    let value = eval_term l.let_value ctx cache output in
     (match value with
      | Value.Fn _f as fn ->
        let is_underscore =
          String.starts_with ~prefix:"_" l.name.parameter_text
        in
        (match is_underscore with
-        | true -> eval_term l.next ctx cache
+        | true -> eval_term l.next ctx cache output
         | false ->
           let _ = add_or_replace_hashtbl ctx l.name.parameter_text fn in
-          eval_term l.next ctx cache)
+          eval_term l.next ctx cache output)
      | _ ->
        let is_underscore =
          String.starts_with ~prefix:"_" l.name.parameter_text
        in
        (match is_underscore with
-        | true -> eval_term l.next ctx cache
+        | true -> eval_term l.next ctx cache output
         | false ->
           let _ = add_or_replace_hashtbl ctx l.name.parameter_text value in
-          eval_term l.next ctx cache))
+          eval_term l.next ctx cache output))
   | Ast.Function f ->
     let ps = List.map (fun (p : Ast.var) -> p.text) f.parameters in
     Value.Fn { ctx; args = ps; value = f.value }
   | Ast.Call c ->
-    (match eval_term c.callee ctx cache with
+    (match eval_term c.callee ctx cache output with
      | Value.Fn fn ->
        let ctx_copy = Hashtbl.copy fn.ctx in
        let _ =
          List.combine fn.args c.arguments
          |> List.iter (function s, term ->
-           add_or_replace_hashtbl ctx_copy s (eval_term term ctx cache))
+           add_or_replace_hashtbl ctx_copy s (eval_term term ctx cache output))
        in
+       (* Cache: Check if we have already evaluated this function with the same arguments *)
        (match Hashtbl.find_opt cache (fn, ctx_copy) with
         | Some v -> v
         | None ->
-          let value = eval_term fn.value ctx_copy cache in
+          let value = eval_term fn.value ctx_copy cache output in
           let _ = add_or_replace_hashtbl cache (fn, ctx_copy) value in
           value)
      | _ -> failwith "Can't call non-function value")
@@ -54,31 +55,33 @@ let rec eval_term term ctx cache =
        failwith err_msg)
   | Ast.Tuple t ->
     (* Here I learned that OCaml execute tuple expressions from right to left *)
-    let first = eval_term t.first ctx cache in
-    let second = eval_term t.second ctx cache in
+    let first = eval_term t.first ctx cache output in
+    let second = eval_term t.second ctx cache output in
     Tuple (first, second)
   | Ast.First f ->
-    let v = eval_term f.first_value ctx cache in
+    let v = eval_term f.first_value ctx cache output in
     (match v with
      | Tuple (a, _) -> a
      | _ -> failwith "Not a tuple in a first call")
   | Ast.Second s ->
-    let v = eval_term s.second_value ctx cache in
+    let v = eval_term s.second_value ctx cache output in
     (match v with
      | Tuple (_, b) -> b
      | _ -> failwith "Not a tuple in a second call")
   | Ast.If i ->
-    let value = eval_term i.condition ctx cache in
+    let value = eval_term i.condition ctx cache output in
     if Value.to_bool value
-    then eval_term i.then_term ctx cache
-    else eval_term i.otherwise ctx cache
+    then eval_term i.then_term ctx cache output
+    else eval_term i.otherwise ctx cache output
   | Ast.Print p ->
-    let value = eval_term p.print_value ctx cache in
-    value |> Value.to_string |> print_endline;
+    let value = eval_term p.print_value ctx cache output in
+    let new_output = value |> Value.to_string |> Printf.sprintf "%s\n" in
+    Printf.printf "%s" new_output;
+    output := !output ^ new_output;
     value
   | Ast.Binary b ->
-    let lhs = eval_term b.lhs ctx cache in
-    let rhs = eval_term b.rhs ctx cache in
+    let lhs = eval_term b.lhs ctx cache output in
+    let rhs = eval_term b.rhs ctx cache output in
     (match b.op, lhs, rhs with
      | Add, Int a, Int b -> Int (Int32.add a b)
      | Add, Str a, Str b -> Str (a ^ b)
@@ -107,6 +110,7 @@ let rec eval_term term ctx cache =
 ;;
 
 let eval ast =
+  let output = ref "" in
   let cache : (Value.func * (string, Value.t) Hashtbl.t, Value.t) Hashtbl.t =
     Hashtbl.create 100
   in
@@ -117,6 +121,6 @@ let eval ast =
     |> Yojson.Safe.Util.member "expression"
     |> Ast.term_of_json
   in
-  let _ = eval_term expression ctx cache in
-  ()
+  let _ = eval_term expression ctx cache output in
+  output
 ;;

@@ -2,4 +2,4 @@
  (name main)
  (package rinha)
  (public_name rinha.exe)
- (libraries yojson))
+ (libraries rinha))

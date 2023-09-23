@@ -5,6 +5,7 @@ synopsis: "rinha"
 description: "rinha"
 maintainer: ["fraifelipe@gmail.com"]
 depends: [
+  "alcotest" {with-test}
   "dune" {>= "3.2" & build & >= "3.1.1"}
   "yojson"
   "odoc" {with-doc}

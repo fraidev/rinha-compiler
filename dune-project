@@ -13,6 +13,7 @@
  (synopsis "rinha")
  (description "rinha")
  (depends
+  (alcotest :with-test)
   (dune
    (and
     :build
