@@ -3,7 +3,8 @@ let path = Sys.getcwd () ^ "/../../../files/"
 let cases =
   [ "sum_print.json", "1\n2\n3\n4\n(3, 4)\n5\n6\n11\n"; "fib.json", "55\n"
   ; "sum.json", "15\n"; "print.json", "Hello world\n"
-  ; "combination.json", "45\n"; "fib_print.json", "hey\nhey\nhey\nhey\nhey\nhey\nhey\n5\n" ]
+  ; "combination.json", "45\n"
+  ; "fib_print.json", "hey\nhey\nhey\nhey\nhey\nhey\nhey\n5\n" ]
 ;;
 
 let run_files () =
