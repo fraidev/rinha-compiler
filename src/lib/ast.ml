@@ -201,3 +201,33 @@ let rec term_of_json json =
   | "Var" -> Var (var_of_json json)
   | _ -> failwith "Invalid term kind"
 ;;
+
+let func_contains_print func =
+  let rec contains_print term =
+    match term with
+    | Int _ -> false
+    | Str _ -> false
+    | Bool _ -> false
+    | Binary { lhs; rhs; _ } -> contains_print lhs || contains_print rhs
+    | Call { callee; arguments; _ } ->
+      contains_print callee
+      || List.fold_left
+           (fun acc arg -> acc || contains_print arg)
+           false
+           arguments
+    | Function { value; _ } -> contains_print value
+    | Let { let_value; next; _ } ->
+      contains_print let_value || contains_print next
+    | If { condition; then_term; otherwise; _ } ->
+      contains_print condition
+      || contains_print then_term
+      || contains_print otherwise
+    | Print _ -> true
+    | First { first_value; _ } -> contains_print first_value
+    | Second { second_value; _ } -> contains_print second_value
+    | Tuple { first; second; _ } ->
+      contains_print first || contains_print second
+    | Var _ -> false
+  in
+  contains_print func.value
+;;

@@ -29,7 +29,8 @@ let rec eval_term term ctx cache output =
           eval_term l.next ctx cache output))
   | Ast.Function f ->
     let ps = List.map (fun (p : Ast.var) -> p.text) f.parameters in
-    Value.Fn { ctx; args = ps; value = f.value }
+    let is_pure = not (Ast.func_contains_print f) in
+    Value.Fn { ctx; args = ps; value = f.value; is_pure }
   | Ast.Call c ->
     (match eval_term c.callee ctx cache output with
      | Value.Fn fn ->
@@ -40,12 +41,15 @@ let rec eval_term term ctx cache output =
            add_or_replace_hashtbl ctx_copy s (eval_term term ctx cache output))
        in
        (* Cache: Check if we have already evaluated this function with the same arguments *)
-       (match Hashtbl.find_opt cache (fn, ctx_copy) with
-        | Some v -> v
-        | None ->
-          let value = eval_term fn.value ctx_copy cache output in
-          let _ = add_or_replace_hashtbl cache (fn, ctx_copy) value in
-          value)
+       if not fn.is_pure
+       then eval_term fn.value ctx_copy cache output
+       else (
+         match Hashtbl.find_opt cache (fn, ctx_copy) with
+         | Some v -> v
+         | None ->
+           let value = eval_term fn.value ctx_copy cache output in
+           let _ = add_or_replace_hashtbl cache (fn, ctx_copy) value in
+           value)
      | _ -> failwith "Can't call non-function value")
   | Ast.Var v ->
     (match Hashtbl.find_opt ctx v.text with

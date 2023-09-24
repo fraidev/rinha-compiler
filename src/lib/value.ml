@@ -5,12 +5,11 @@ type t =
   | Tuple of t * t
   | Fn of func
 
-(* and func = (string, t) Hashtbl.t * string list * Ast.term *)
 and func =
-  { (* name : string *)
-    ctx : (string, t) Hashtbl.t
+  { ctx : (string, t) Hashtbl.t
   ; args : string list
   ; value : Ast.term
+  ; is_pure : bool
   }
 
 let rec to_string json =
